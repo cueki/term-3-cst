@@ -1,0 +1,5 @@
+# hidden files
+.*
+
+# gut keep .gitignore
+!.gitignore
