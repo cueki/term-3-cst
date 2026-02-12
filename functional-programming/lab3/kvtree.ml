@@ -4,44 +4,44 @@
 (* I am not sure if you wanted comments on each function or not but the code is essentially
    copied from bstree2.ml with slight modifications...*)
 
-type ('k, 'v) kvtree = Leaf | Node of 'k * 'v * ('k, 'v) kvtree * ('k, 'v) kvtree
+type ('k, 'v) kvtree = L | N of 'k * 'v * ('k, 'v) kvtree * ('k, 'v) kvtree
 
-let kvtree_empty = Leaf
+let kvtree_empty = L
 
-let kvtree_is_empty t = t = Leaf
+let kvtree_is_empty t = t = L
 
-let rec kvtree_find_opt k t =
+let rec kvtree_find_opt cmp k t =
   match t with
-  | Leaf -> None
-  | Node (k', v, l, _) when k < k' -> kvtree_find_opt k l
-  | Node (k', _, _, r) when k > k' -> kvtree_find_opt k r
-  | Node (_, v, _, _) -> Some v
+  | L -> None
+  | N (k', v, l, _) when cmp k k' < 0 -> kvtree_find_opt cmp k l
+  | N (k', _, _, r) when cmp k k' > 0 -> kvtree_find_opt cmp k r
+  | N (_, v, _, _) -> Some v
 
-let rec kvtree_add k v t =
+let rec kvtree_add cmp k v t =
   match t with
-  | Leaf -> Node (k, v, Leaf, Leaf)
-  | Node (k', v', l, r) when k < k' -> Node (k', v', kvtree_add k v l, r)
-  | Node (k', v', l, r) when k > k' -> Node (k', v', l, kvtree_add k v r)
-  | Node (_, _, l, r) -> Node (k, v, l, r)
+  | L -> N (k, v, L, L)
+  | N (k', v', l, r) when cmp k k' < 0 -> N (k', v', kvtree_add cmp k v l, r)
+  | N (k', v', l, r) when cmp k k' > 0 -> N (k', v', l, kvtree_add cmp k v r)
+  | N (_, _, l, r) -> N (k, v, l, r)
 
 let rec kvtree_remove_min t =
   match t with
-  | Leaf -> failwith "kvtree_remove_min: empty tree"
-  | Node (k, v, Leaf, r) -> (k, v, r)
-  | Node (k, v, l, r) ->
+  | L -> failwith "kvtree_remove_min: empty tree"
+  | N (k, v, L, r) -> (k, v, r)
+  | N (k, v, l, r) ->
     let (min_k, min_v, l') = kvtree_remove_min l in
-    (min_k, min_v, Node (k, v, l', r))
+    (min_k, min_v, N (k, v, l', r))
 
-let rec kvtree_remove k t =
+let rec kvtree_remove cmp k t =
   match t with
-  | Leaf -> Leaf
-  | Node (k', v', l, r) when k < k' -> Node (k', v', kvtree_remove k l, r)
-  | Node (k', v', l, r) when k > k' -> Node (k', v', l, kvtree_remove k r)
-  | Node (_, _, Leaf, r) -> r
-  | Node (_, _, l, Leaf) -> l
-  | Node (_, _, l, r) ->
+  | L -> L
+  | N (k', v', l, r) when cmp k k' < 0 -> N (k', v', kvtree_remove cmp k l, r)
+  | N (k', v', l, r) when cmp k k' > 0 -> N (k', v', l, kvtree_remove cmp k r)
+  | N (_, _, L, r) -> r
+  | N (_, _, l, L) -> l
+  | N (_, _, l, r) ->
     let (succ_k, succ_v, r') = kvtree_remove_min r in
-    Node (succ_k, succ_v, l, r')
+    N (succ_k, succ_v, l, r')
 
-let kvtree_of_list lst =
-  List.fold_left (fun acc (k, v) -> kvtree_add k v acc) Leaf lst
+let kvtree_of_list cmp lst =
+  List.fold_left (fun acc (k, v) -> kvtree_add cmp k v acc) L lst
