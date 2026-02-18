@@ -1,0 +1,12 @@
+# PyCharm
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.pyc
+
+# UML
+3522_Assignment1.drawio
+
+TODO_Tony.txt
